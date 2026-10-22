@@ -1118,3 +1118,36 @@ section[id] {
         font-size: 10px;
     }
 }
+
+/* AI document summarizer */
+.summary-card {
+    grid-column: 1 / -1;
+    margin-top: 24px;
+}
+
+.summary-card > #summarize-button {
+    width: 100%;
+}
+
+#summary-output {
+    margin-top: 22px;
+    line-height: 1.8;
+}
+
+#summary-text {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    color: var(--ink);
+    line-height: 1.8;
+    font-size: 14px;
+}
+
+#copy-summary-button {
+    margin-top: 18px;
+}
+
+@media (max-width: 680px) {
+    .summary-card {
+        padding: 21px;
+    }
+}

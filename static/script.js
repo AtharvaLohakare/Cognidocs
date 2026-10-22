@@ -1,175 +1,236 @@
 
-const uploadForm = document.getElementById("upload-form");
-const fileInput = document.getElementById("document-input");
-const fileInfo = document.getElementById("file-info");
-const uploadButton = document.getElementById("upload-button");
-const uploadStatus = document.getElementById("upload-status");
+const $ = (id) => document.getElementById(id);
 
-const documentPreview = document.getElementById("document-preview");
-const documentDetails = document.getElementById("document-details");
-const previewText = document.getElementById("preview-text");
+let documentReady = false;
 
-const askForm = document.getElementById("ask-form");
-const questionInput = document.getElementById("question-input");
-const askButton = document.getElementById("ask-button");
-const answerStatus = document.getElementById("answer-status");
-const answerOutput = document.getElementById("answer-output");
-const answerText = document.getElementById("answer-text");
-
-const MAX_FILE_SIZE = 15 * 1024 * 1024;
-let documentUploaded = false;
-
-function setStatus(element, message, type = "") {
-    element.textContent = message;
-    element.className = "status";
-
-    if (type) {
-        element.classList.add(type);
-    }
+function csrfToken() {
+    return document.querySelector(
+        '#upload-form input[name="csrfmiddlewaretoken"]'
+    )?.value || "";
 }
 
-fileInput.addEventListener("change", () => {
-    const file = fileInput.files[0];
+async function postData(url, payload, json = false) {
+    const headers = { "X-CSRFToken": csrfToken() };
+    let body = payload;
 
-    if (!file) {
-        fileInfo.textContent = "No file selected.";
-        return;
+    if (json) {
+        headers["Content-Type"] = "application/json";
+        body = JSON.stringify(payload);
     }
 
-    fileInfo.textContent =
-        `${file.name} (${(file.size / (1024 * 1024)).toFixed(2)} MB)`;
+    const response = await fetch(url, {
+        method: "POST",
+        headers,
+        body,
+        credentials: "same-origin"
+    });
 
-    if (file.size > MAX_FILE_SIZE) {
-        setStatus(uploadStatus, "File exceeds the 15 MB limit.", "error");
-    } else {
-        setStatus(uploadStatus, "");
+    let data;
+    try {
+        data = await response.json();
+    } catch {
+        throw new Error("The server returned an unexpected response.");
     }
+
+    if (!response.ok) {
+        throw new Error(data.error || data.message || `Request failed (${response.status}).`);
+    }
+
+    return data;
+}
+
+function setStatus(id, message, isError = false) {
+    const element = $(id);
+    if (!element) return;
+    element.textContent = message;
+    element.style.color = isError ? "#b42318" : "";
+}
+
+function show(element, visible = true) {
+    if (element) element.classList.toggle("hidden", !visible);
+}
+
+function setDocumentReady(ready) {
+    documentReady = ready;
+    if ($("ask-button")) $("ask-button").disabled = !ready;
+    if ($("summarize-button")) $("summarize-button").disabled = !ready;
+}
+
+function addText(parent, tag, text, className = "") {
+    const element = document.createElement(tag);
+    element.textContent = text || "";
+    if (className) element.className = className;
+    parent.appendChild(element);
+    return element;
+}
+
+// Display the selected filename before upload.
+$("document-input")?.addEventListener("change", (event) => {
+    const file = event.target.files[0];
+    $("file-info").textContent = file
+        ? `${file.name} (${(file.size / (1024 * 1024)).toFixed(2)} MB)`
+        : "No file selected.";
 });
 
-uploadForm.addEventListener("submit", async (event) => {
+// Upload a PDF or TXT file.
+$("upload-form")?.addEventListener("submit", async (event) => {
     event.preventDefault();
 
-    const file = fileInput.files[0];
-
+    const file = $("document-input")?.files[0];
     if (!file) {
-        setStatus(uploadStatus, "Please select a PDF or TXT file.", "error");
+        setStatus("upload-status", "Please choose a PDF or TXT file.", true);
         return;
     }
 
-    const allowedExtensions = [".pdf", ".txt"];
-    const lowerName = file.name.toLowerCase();
-
-    if (!allowedExtensions.some(extension => lowerName.endsWith(extension))) {
-        setStatus(uploadStatus, "Only PDF and TXT files are supported.", "error");
+    if (file.size > 15 * 1024 * 1024) {
+        setStatus("upload-status", "The file must be smaller than 15 MB.", true);
         return;
     }
 
-    if (file.size > MAX_FILE_SIZE) {
-        setStatus(uploadStatus, "File exceeds the 15 MB limit.", "error");
+    const extension = file.name.split(".").pop().toLowerCase();
+    if (!["pdf", "txt"].includes(extension)) {
+        setStatus("upload-status", "Only PDF and TXT files are supported.", true);
         return;
     }
 
-    const formData = new FormData();
-    formData.append("document", file);
-
-    uploadButton.disabled = true;
-    uploadButton.textContent = "Uploading...";
-    setStatus(uploadStatus, "Reading your document...");
-    documentPreview.classList.add("hidden");
-    answerOutput.classList.add("hidden");
-    documentUploaded = false;
-    askButton.disabled = true;
+    const button = $("upload-button");
+    button.disabled = true;
+    button.textContent = "Processing document...";
+    setStatus("upload-status", "Uploading and indexing your document...");
+    setDocumentReady(false);
 
     try {
-        const response = await fetch("/upload", {
-            method: "POST",
-            body: formData
-        });
+        const formData = new FormData(event.currentTarget);
+        // Ensure the backend receives the expected field name.
+        formData.set("file", file);
 
-        const result = await response.json();
+        const data = await postData("/upload", formData);
 
-        if (!response.ok) {
-            throw new Error(result.error || "Upload failed.");
-        }
-
-        documentUploaded = true;
-        askButton.disabled = false;
-
+        setDocumentReady(true);
         setStatus(
-            uploadStatus,
-            result.message || "Document uploaded successfully!",
-            "success"
+            "upload-status",
+            `Uploaded successfully: ${data.filename || file.name}`
         );
 
-        documentDetails.textContent =
-            `${result.filename} · ${result.characters.toLocaleString()} characters`;
+        $("document-details").textContent =
+            `${data.filename || file.name} · ` +
+            `${data.chunks ?? "?"} chunks · ` +
+            `${data.characters ?? "?"} characters`;
 
-        previewText.textContent = result.preview || "";
-        documentPreview.classList.remove("hidden");
-
-        questionInput.focus();
-
+        $("preview-text").textContent = data.preview || "Document processed and ready for questions.";
+        show($("document-preview"));
+        show($("answer-output"), false);
+        show($("summary-output"), false);
+        setStatus("answer-status", "");
+        setStatus("summary-status", "");
     } catch (error) {
-        setStatus(uploadStatus, error.message, "error");
+        setStatus("upload-status", error.message, true);
     } finally {
-        uploadButton.disabled = false;
-        uploadButton.textContent = "Upload document";
+        button.disabled = false;
+        button.textContent = "Upload Document →";
     }
 });
 
-askForm.addEventListener("submit", async (event) => {
+// Fill the question box when a suggested question is clicked.
+document.querySelectorAll("[data-question]").forEach((button) => {
+    button.addEventListener("click", () => {
+        $("question-input").value = button.dataset.question;
+        $("question-input").focus();
+    });
+});
+
+// Ask a question and display its answer plus source references.
+$("ask-form")?.addEventListener("submit", async (event) => {
     event.preventDefault();
 
-    if (!documentUploaded) {
-        setStatus(answerStatus, "Upload a document first.", "error");
+    if (!documentReady) {
+        setStatus("answer-status", "Upload a document first.", true);
         return;
     }
 
-    const question = questionInput.value.trim();
-
+    const question = $("question-input").value.trim();
     if (!question) {
-        setStatus(answerStatus, "Please enter a question.", "error");
+        setStatus("answer-status", "Enter a question first.", true);
         return;
     }
 
-    askButton.disabled = true;
-    askButton.textContent = "Thinking...";
-    answerOutput.classList.add("hidden");
-    setStatus(answerStatus, "Analyzing your document...");
+    const button = $("ask-button");
+    button.disabled = true;
+    button.textContent = "Thinking...";
+    setStatus("answer-status", "Searching your document for relevant passages...");
+    show($("answer-output"), false);
 
     try {
-        const response = await fetch("/ask", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ question })
-        });
+        const data = await postData("/ask", { question }, true);
 
-        const result = await response.json();
+        $("answer-text").textContent = data.answer || "No answer was returned.";
+        const sources = $("sources-list");
+        sources.replaceChildren();
 
-        if (!response.ok) {
-            throw new Error(result.error || "Could not get an answer.");
+        if (Array.isArray(data.sources) && data.sources.length) {
+            addText(sources, "h4", "Sources from your document");
+
+            data.sources.forEach((source, index) => {
+                const card = document.createElement("div");
+                card.className = "source-reference";
+
+                const page = source.page != null ? ` · Page ${source.page}` : "";
+                addText(card, "strong", `Source ${index + 1}${page}`);
+                addText(card, "p", source.text || source.content || "");
+                sources.appendChild(card);
+            });
+        } else {
+            addText(sources, "p", "No source passages were returned.");
         }
 
-        // textContent prevents returned text from being interpreted as HTML.
-        answerText.textContent = result.answer || "No answer was returned.";
-        answerOutput.classList.remove("hidden");
-        setStatus(answerStatus, "Answer generated successfully.", "success");
-
+        show($("answer-output"));
+        setStatus("answer-status", data.grounded === false
+            ? "The answer may not be fully supported by the document."
+            : "Answer generated.");
     } catch (error) {
-        setStatus(answerStatus, error.message, "error");
+        setStatus("answer-status", error.message, true);
     } finally {
-        askButton.disabled = !documentUploaded;
-        askButton.textContent = "Ask DocuMind AI";
+        button.disabled = !documentReady;
+        button.textContent = "✦ Ask DocuMind AI";
     }
 });
 
+// Summarize the uploaded document.
+$("summarize-button")?.addEventListener("click", async () => {
+    if (!documentReady) {
+        setStatus("summary-status", "Upload a document first.", true);
+        return;
+    }
 
+    const button = $("summarize-button");
+    button.disabled = true;
+    button.textContent = "Summarizing...";
+    setStatus("summary-status", "Generating your summary...");
+    show($("summary-output"), false);
 
-document.querySelectorAll(".suggestion").forEach((button) => {
-    button.addEventListener("click", () => {
-        questionInput.value = button.dataset.question;
-        questionInput.focus();
-    });
+    try {
+        const data = await postData("/summarize", {}, true);
+        $("summary-text").textContent =
+            data.summary || data.error || "No summary was returned.";
+        show($("summary-output"));
+        setStatus("summary-status", "Summary ready.");
+    } catch (error) {
+        setStatus("summary-status", error.message, true);
+    } finally {
+        button.disabled = !documentReady;
+        button.textContent = "✦ Summarize Document";
+    }
+});
+
+// Copy the generated summary.
+$("copy-summary-button")?.addEventListener("click", async () => {
+    const summary = $("summary-text")?.textContent || "";
+    if (!summary) return;
+
+    try {
+        await navigator.clipboard.writeText(summary);
+        setStatus("summary-status", "Summary copied to clipboard.");
+    } catch {
+        setStatus("summary-status", "Could not copy automatically. Select the summary text and copy it manually.", true);
+    }
 });
