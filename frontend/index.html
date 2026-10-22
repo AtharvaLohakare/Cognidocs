@@ -1,0 +1,253 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#f7f8fc">
+    <meta name="description" content="Upload documents, ask questions, and discover insights with DocuMind AI.">
+    <title>DocuMind AI | Smart Document Assistant</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="site-header">
+    <div class="container header-content">
+        <a class="logo" href="#home">DocuMind <span>AI</span></a>
+        <nav class="main-nav" aria-label="Main navigation">
+            <a href="#home">Home</a>
+            <a href="#how-it-works">How It Works</a>
+            <a href="#features">Features</a>
+            <a href="#upload-section">Get Started</a>
+        </nav>
+        <a class="nav-button" href="#upload-section">Try DocuMind AI ↗</a>
+    </div>
+</header>
+
+<main>
+    <section id="home" class="hero-section">
+        <div class="container hero-grid">
+            <div class="hero-content">
+                <p class="eyebrow">YOUR DOCUMENTS. SMARTER.</p>
+                <h1>Understand your documents <span>with AI.</span></h1>
+                <p class="hero-description">
+                    Stop spending hours searching through long documents.
+                    Upload your files, ask questions in plain English,
+                    and get useful answers in seconds.
+                </p>
+                <div class="hero-actions">
+                    <a href="#upload-section" class="button primary">Get Started Free →</a>
+                    <a href="#how-it-works" class="button secondary">How It Works</a>
+                </div>
+                <div class="hero-points">
+                    <span>✓ PDF and TXT support</span>
+                    <span>✓ AI-powered answers</span>
+                    <span>✓ Source references</span>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="visual-window">
+                    <div class="visual-topbar">
+                        <div class="window-dots"><span></span><span></span><span></span></div>
+                        <span>DocuMind AI Workspace</span>
+                    </div>
+                    <div class="visual-document">
+                        <div class="document-icon">PDF</div>
+                        <div class="document-info">
+                            <strong>Your document</strong>
+                            <p>Ready to analyze with AI</p>
+                        </div>
+                        <span class="ready-indicator">✓</span>
+                    </div>
+                    <div class="visual-question">
+                        <span class="mini-label">YOUR QUESTION</span>
+                        <p>What are the main points in this document?</p>
+                    </div>
+                    <div class="visual-answer">
+                        <div class="answer-heading"><span class="ai-mark">✦</span><strong>DocuMind AI</strong></div>
+                        <p>Find key ideas, explain important sections, and answer questions using your document.</p>
+                        <div class="answer-lines"><span></span><span></span><span></span></div>
+                    </div>
+                    <div class="visual-footer">✦ Ask questions. Find answers.</div>
+                </div>
+                <div class="floating-badge"><span class="badge-dot"></span>Your AI document assistant</div>
+            </div>
+        </div>
+    </section>
+
+    <section id="features" class="features-section">
+        <div class="container">
+            <div class="section-intro">
+                <p class="eyebrow">WORK SMARTER</p>
+                <h2>Your documents, made easier.</h2>
+                <p>Get the information you need without reading every page manually.</p>
+            </div>
+            <div class="features-grid">
+                <article class="feature-card">
+                    <div class="feature-icon purple">↑</div>
+                    <h3>Easy Uploads</h3>
+                    <p>Upload PDF and TXT documents and let DocuMind AI extract their readable text.</p>
+                </article>
+                <article class="feature-card">
+                    <div class="feature-icon blue">✦</div>
+                    <h3>Ask Questions</h3>
+                    <p>Ask natural-language questions and get answers based on your uploaded document.</p>
+                </article>
+                <article class="feature-card">
+                    <div class="feature-icon orange">≡</div>
+                    <h3>Source References</h3>
+                    <p>Trace answers back to relevant document passages and page numbers.</p>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <section id="how-it-works" class="how-section">
+        <div class="container">
+            <div class="section-intro">
+                <p class="eyebrow">THREE SIMPLE STEPS</p>
+                <h2>How DocuMind AI works</h2>
+                <p>Go from a document to an answer in just a few steps.</p>
+            </div>
+            <div class="steps-grid">
+                <article class="step-card">
+                    <div class="step-number">01</div>
+                    <h3>Upload a document</h3>
+                    <p>Choose a PDF or TXT file. DocuMind AI extracts text for analysis.</p>
+                </article>
+                <article class="step-card">
+                    <div class="step-number">02</div>
+                    <h3>Ask your question</h3>
+                    <p>Type what you want to know about the uploaded document.</p>
+                </article>
+                <article class="step-card">
+                    <div class="step-number">03</div>
+                    <h3>Explore the answer</h3>
+                    <p>Read an AI-generated response and review its source passages.</p>
+                </article>
+            </div>
+            <div class="how-cta">
+                <div>
+                    <h3>Ready to try it?</h3>
+                    <p>Your next answer could be just one question away.</p>
+                </div>
+                <a href="#upload-section" class="button primary">Start Now →</a>
+            </div>
+        </div>
+    </section>
+
+    <section id="upload-section" class="workspace-section">
+        <div class="container">
+            <div class="section-intro">
+                <p class="eyebrow">YOUR AI WORKSPACE</p>
+                <h2>Let's explore your document.</h2>
+                <p>Upload a file, ask questions, and generate a summary.</p>
+            </div>
+
+            <div class="workspace-grid">
+                <section class="panel upload-card">
+                    <div class="section-heading">
+                        <div class="step-number">01</div>
+                        <div><h2>Upload your document</h2><p>Select a PDF or TXT file.</p></div>
+                    </div>
+
+                    <form id="upload-form" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <label class="file-drop" for="document-input">
+                            <span class="upload-icon">↑</span>
+                            <strong>Choose a document</strong>
+                            <span>PDF or TXT · Maximum 15 MB</span>
+                            <input type="file" id="document-input" name="file"
+                                   accept=".pdf,.txt,application/pdf,text/plain" required>
+                        </label>
+                        <p id="file-info" class="file-info">No file selected.</p>
+                        <button type="submit" id="upload-button" class="button primary full-width">
+                            Upload Document →
+                        </button>
+                        <p id="upload-status" class="status" role="status" aria-live="polite"></p>
+                    </form>
+
+                    <div id="document-preview" class="preview hidden">
+                        <h3>✓ Document ready</h3>
+                        <p id="document-details"></p>
+                        <pre id="preview-text"></pre>
+                    </div>
+                </section>
+
+                <section id="ask-document" class="panel question-card">
+                    <div class="section-heading">
+                        <div class="step-number">02</div>
+                        <div><h2>Ask your document</h2><p>Get answers grounded in document content.</p></div>
+                    </div>
+
+                    <form id="ask-form">
+                        <label for="question-input" class="field-label">Your question</label>
+                        <textarea id="question-input" name="question"
+                                  placeholder="What are the main findings?" rows="5" required></textarea>
+
+                        <div class="suggestion-list">
+                            <span class="mini-label">QUESTION IDEAS</span>
+                            <button type="button" class="suggestion" data-question="Summarize this document.">Summarize document</button>
+                            <button type="button" class="suggestion" data-question="What are the key points?">Find key points</button>
+                            <button type="button" class="suggestion" data-question="What is the main conclusion?">Explain conclusion</button>
+                        </div>
+
+                        <button type="submit" id="ask-button" class="button primary full-width" disabled>
+                            ✦ Ask DocuMind AI
+                        </button>
+                        <p id="answer-status" class="status" role="status" aria-live="polite"></p>
+
+                        <div id="answer-output" class="answer hidden">
+                            <h3>✦ AI Answer</h3>
+                            <div id="answer-text"></div>
+                            <div id="sources-list"></div>
+                        </div>
+                    </form>
+                </section>
+
+                <section id="summarizer" class="panel summary-card">
+                    <div class="section-heading">
+                        <div class="step-number">03</div>
+                        <div><h2>Summarize your document</h2><p>Get the overview and main points.</p></div>
+                    </div>
+
+                    <button type="button" id="summarize-button" class="button primary" disabled>
+                        ✦ Summarize Document
+                    </button>
+                    <p id="summary-status" class="status" role="status" aria-live="polite"></p>
+
+                    <div id="summary-output" class="answer hidden">
+                        <h3>✦ Document Summary</h3>
+                        <div id="summary-text"></div>
+                        <button type="button" id="copy-summary-button" class="button secondary">
+                            Copy Summary
+                        </button>
+                    </div>
+                </section>
+            </div>
+
+            <p class="workspace-note">🔒 Upload only documents you are authorized to share.</p>
+        </div>
+    </section>
+
+    <section class="closing-section">
+        <div class="container closing-content">
+            <p class="eyebrow">LESS SEARCHING. MORE UNDERSTANDING.</p>
+            <h2>Make every document easier to understand.</h2>
+            <p>Let AI help you find the information that matters.</p>
+            <a href="#upload-section" class="button light-button">Explore Your Document →</a>
+        </div>
+    </section>
+</main>
+
+<footer class="site-footer">
+    <div class="container footer-content">
+        <a class="logo" href="#home">DocuMind <span>AI</span></a>
+        <p>Understand documents faster, one question at a time.</p>
+        <a href="#home">Back to top ↑</a>
+    </div>
+</footer>
+
+<script src="script.js" defer></script>
+</body>
+</html>
